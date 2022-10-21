@@ -1,0 +1,12 @@
+[package]
+name = "noir-wallet-lib"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.66"
+bitcoin = "0.29.1"
+hex = "0.4.3"
+sp-core = "6.0.0"
+thiserror = "1.0.37"
+tiny-bip39 = "1.0.0"
