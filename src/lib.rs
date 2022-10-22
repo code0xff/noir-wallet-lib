@@ -98,7 +98,6 @@ pub mod ecdsa {
       let secp256k1 = Secp256k1::new();
       let path = DerivationPath::from_str(path).unwrap();
       let derived = root.derive_priv(&secp256k1, &path)?;
-      derived.chain_code;
       let keypair = derived.to_keypair(&secp256k1);
       Ok(Self {
         seed: self.seed.to_vec(),
