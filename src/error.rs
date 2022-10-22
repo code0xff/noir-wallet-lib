@@ -59,3 +59,9 @@ impl From<anyhow::Error> for NoirError {
     NoirError::EcdsaError { message: error.to_string() }
   }
 }
+
+impl From<bitcoin::secp256k1::Error> for NoirError {
+  fn from(error: bitcoin::secp256k1::Error) -> Self {
+    NoirError::EcdsaError { message: error.to_string() }
+  }
+}
