@@ -96,7 +96,7 @@ pub mod ecdsa {
     pub fn derive(&self, path: &String) -> Result<Self, NoirError> {
       let root = ExtendedPrivKey::new_master(Network::Bitcoin, self.seed().as_ref())?;
       let secp256k1 = Secp256k1::new();
-      let path = DerivationPath::from_str(path).unwrap();
+      let path = DerivationPath::from_str(path)?;
       let derived = root.derive_priv(&secp256k1, &path)?;
       let keypair = derived.to_keypair(&secp256k1);
       Ok(Self {
