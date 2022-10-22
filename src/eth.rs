@@ -13,7 +13,7 @@ impl Address {
     self.inner.clone()
   }
 
-  pub fn from_public(public: &[u8; 33]) -> Result<Self, NoirError> {
+  pub fn from_public(public: &[u8]) -> Result<Self, NoirError> {
     let public = PublicKey::from_slice(public)?;
     let keccak256ed = keccak_256(&public.serialize_uncompressed()[1..]);
     let sliced = &keccak256ed[12..];
