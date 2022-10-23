@@ -3,8 +3,6 @@ use bitcoin::psbt::serialize::Serialize;
 use bitcoin::util::base58;
 use sp_core::hashing::sha2_256;
 
-use crate::error::NoirError;
-
 #[derive(PartialEq)]
 pub struct Address {
   inner: Vec<u8>,
@@ -15,7 +13,7 @@ impl Address {
     self.inner.clone()
   }
 
-  pub fn from_public(public: &[u8]) -> Result<Self, NoirError> {
+  pub fn from_public(public: &[u8]) -> Self {
     let sha256ed_public = sha2_256(public);
     let ripemd160ed = ripemd160::Hash::hash(&sha256ed_public).serialize();
     let mut address: [u8; 25] = [0; 25];
@@ -24,9 +22,9 @@ impl Address {
     let checksum = sha2_256(&sha256ed_network_added)[..4].to_owned();
     address[21..].clone_from_slice(&checksum);
 
-    Ok(Self {
+    Self {
       inner: address.to_vec()
-    })
+    }
   }
 
   pub fn to_string(&self) -> String {
@@ -39,6 +37,7 @@ mod tests {
   use bitcoin::hashes::{Hash, ripemd160};
   use bitcoin::psbt::serialize::Serialize;
   use sp_core::hashing::sha2_256;
+
   use crate::btc;
 
   #[test]
@@ -59,7 +58,7 @@ mod tests {
   #[test]
   fn btc_address_test() {
     let public = hex::decode("03CEDC3561402780F1345D5EC2C6B5CD18461347F2B1C4BCE9B4178368FC53CA6E").unwrap();
-    let address = btc::Address::from_public(&public).unwrap();
+    let address = btc::Address::from_public(&public);
     assert_eq!(address.to_string(), "18ocWE2zNjuGegnWeDbBAPwrhmdzfX9XJL");
   }
 }

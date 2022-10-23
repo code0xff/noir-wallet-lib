@@ -16,9 +16,9 @@ impl Address {
   pub fn from_public(public: &[u8]) -> Result<Self, NoirError> {
     let public = PublicKey::from_slice(public)?;
     let keccak256ed = keccak_256(&public.serialize_uncompressed()[1..]);
-    let sliced = &keccak256ed[12..];
+    let address = &keccak256ed[12..];
     Ok(Self {
-      inner: sliced.to_vec()
+      inner: address.to_vec()
     })
   }
 
@@ -47,7 +47,6 @@ mod tests {
   #[test]
   fn text_keccak256_test() {
     let keccak256ed = keccak_256("7f7625faa1ca985e9ad678656a9dcdf79620df6b".as_bytes());
-
     assert_eq!(hex::encode(keccak256ed), "3015b5c87eeb15cce85e3e48eefb50b400dd497c7b0bd41f16937ead349b3784");
   }
 
@@ -58,7 +57,6 @@ mod tests {
     let path = "m/44'/60'/0'/0/0".to_string();
     let derived = keypair.derive(&path).unwrap();
     let address = Address::from_public(&derived.public.as_bytes()).unwrap();
-
     assert_eq!(address.to_string(), "0x38e4A67366963f356f9834c04481ff65ca7A07a3");
   }
 }

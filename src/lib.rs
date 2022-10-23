@@ -1,6 +1,7 @@
 pub mod error;
 pub mod eth;
 pub mod btc;
+pub mod cosmos;
 
 pub mod bip39 {
   use bip39::Seed;
@@ -50,6 +51,12 @@ pub mod ecdsa {
     }
   }
 
+  impl Private {
+    pub fn as_bytes(&self) -> [u8; 32] {
+      self.inner.clone()
+    }
+  }
+
   pub struct Public {
     inner: [u8; 33],
   }
@@ -74,9 +81,16 @@ pub mod ecdsa {
 
   impl KeyPair {
     pub fn from_mnemonic(mnemonic: &String) -> Result<Self, NoirError> {
-      let mnemonic = Mnemonic::from_phrase(mnemonic, English)?;
-      let seed = Seed::new(&mnemonic, "");
-      Self::from_seed(seed.as_bytes())
+      let mnemonic = Mnemonic::from_phrase(mnemonic, English);
+      match mnemonic {
+        Ok(m) => {
+          let seed = Seed::new(&m, "");
+          Ok(Self::from_seed(seed.as_bytes())?)
+        }
+        Err(err) => {
+          Err(NoirError::Bip39Error { message: err.to_string() })
+        }
+      }
     }
 
     pub fn from_seed(seed: &[u8]) -> Result<Self, NoirError> {
