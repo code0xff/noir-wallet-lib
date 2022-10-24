@@ -25,66 +25,74 @@ pub mod ecdsa {
   use bip39::Language::English;
   use bitcoin::Network;
   use bitcoin::secp256k1::Secp256k1;
-  use bitcoin::util::bip32::{DerivationPath, ExtendedPrivKey};
+  use bitcoin::util::base58;
+  use bitcoin::util::bip32::{DerivationPath, ExtendedPrivKey, ExtendedPubKey};
 
   use crate::error::NoirError;
 
+  #[derive(Clone)]
   pub struct KeyPair {
     pub seed: Vec<u8>,
     pub private: Private,
     pub public: Public,
+    pub ext_private: Option<ExtendedPrivate>,
+    pub ext_public: ExtendedPublic,
   }
 
-  pub struct Private {
-    inner: [u8; 32],
-  }
+  #[derive(Copy, Clone, Debug)]
+  pub struct Private([u8; 32]);
 
   impl Display for Private {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-      write!(f, "0x{}", hex::encode(self.inner.as_slice()))
-    }
-  }
-
-  impl Debug for Private {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-      write!(f, "{:x?}", self.inner)
+      write!(f, "0x{}", hex::encode(self.0.as_slice()))
     }
   }
 
   impl Private {
     pub fn as_bytes(&self) -> [u8; 32] {
-      self.inner.clone()
+      self.0.clone()
     }
   }
 
-  pub struct Public {
-    inner: [u8; 33],
+  #[derive(Copy, Clone, Debug)]
+  pub struct ExtendedPrivate([u8; 78]);
+
+  impl Display for ExtendedPrivate {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+      base58::check_encode_slice_to_fmt(f, self.0.as_slice())
+    }
   }
+
+  #[derive(Copy, Clone, Debug)]
+  pub struct Public([u8; 33]);
 
   impl Display for Public {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-      write!(f, "0x{}", hex::encode(self.inner.as_slice()))
-    }
-  }
-
-  impl Debug for Public {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-      write!(f, "{:x?}", self.inner)
+      write!(f, "0x{}", hex::encode(self.0.as_slice()))
     }
   }
 
   impl Public {
     pub fn as_bytes(&self) -> [u8; 33] {
-      self.inner.clone()
+      self.0.clone()
+    }
+  }
+
+  #[derive(Copy, Clone, Debug)]
+  pub struct ExtendedPublic([u8; 78]);
+
+  impl Display for ExtendedPublic {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+      base58::check_encode_slice_to_fmt(f, self.0.as_slice())
     }
   }
 
   impl KeyPair {
-    pub fn from_mnemonic(mnemonic: &String) -> Result<Self, NoirError> {
-      let mnemonic = Mnemonic::from_phrase(mnemonic, English);
-      match mnemonic {
-        Ok(m) => {
-          let seed = Seed::new(&m, "");
+    pub fn from_mnemonic(mnemonic: &str) -> Result<Self, NoirError> {
+      let res = Mnemonic::from_phrase(mnemonic, English);
+      match res {
+        Ok(mnemonic) => {
+          let seed = Seed::new(&mnemonic, "");
           Ok(Self::from_seed(seed.as_bytes())?)
         }
         Err(err) => {
@@ -97,10 +105,14 @@ pub mod ecdsa {
       let secp256k1 = Secp256k1::new();
       let master = ExtendedPrivKey::new_master(Network::Bitcoin, seed)?;
       let keypair = master.to_keypair(&secp256k1);
+      let secp256k1 = Secp256k1::new();
+      let master_public = ExtendedPubKey::from_priv(&secp256k1, &master);
       Ok(Self {
         seed: seed.to_vec(),
-        private: Private { inner: keypair.secret_bytes() },
-        public: Public { inner: keypair.public_key().serialize() },
+        private: Private(keypair.secret_bytes()),
+        public: Public(keypair.public_key().serialize()),
+        ext_private: Some(ExtendedPrivate(master.encode())),
+        ext_public: ExtendedPublic(master_public.encode()),
       })
     }
 
@@ -108,16 +120,20 @@ pub mod ecdsa {
       self.seed.clone()
     }
 
-    pub fn derive(&self, path: &String) -> Result<Self, NoirError> {
-      let root = ExtendedPrivKey::new_master(Network::Bitcoin, self.seed().as_ref())?;
+    pub fn derive(&self, path: &str) -> Result<Self, NoirError> {
+      let master = ExtendedPrivKey::new_master(Network::Bitcoin, self.seed().as_ref())?;
       let secp256k1 = Secp256k1::new();
       let path = DerivationPath::from_str(path)?;
-      let derived = root.derive_priv(&secp256k1, &path)?;
+      let derived = master.derive_priv(&secp256k1, &path)?;
       let keypair = derived.to_keypair(&secp256k1);
+      let secp256k1 = Secp256k1::new();
+      let derived_public = ExtendedPubKey::from_priv(&secp256k1, &derived);
       Ok(Self {
         seed: self.seed.to_vec(),
-        private: Private { inner: keypair.secret_bytes() },
-        public: Public { inner: keypair.public_key().serialize() },
+        private: Private(keypair.secret_bytes()),
+        public: Public(keypair.public_key().serialize()),
+        ext_private: Some(ExtendedPrivate(derived.encode())),
+        ext_public: ExtendedPublic(derived_public.encode()),
       })
     }
   }
@@ -129,12 +145,24 @@ mod tests {
 
   #[test]
   fn parse_path_test() {
-    let mnemonic = "hammer afford nothing drastic news coil inform switch stool wet denial science".to_string();
-    let keypair = KeyPair::from_mnemonic(&mnemonic).unwrap();
-    let path = "m/44'/60'/0'/0/0".to_string();
-    let derived = keypair.derive(&path).unwrap();
+    let keypair = KeyPair::from_mnemonic("hammer afford nothing drastic news coil inform switch stool wet denial science").unwrap();
+    let derived = keypair.derive("m/44'/60'/0'/0/0").unwrap();
 
     assert_eq!(derived.private.to_string(), "0xd8f01ecf156f642a53f39c5ce47c03e237fd9118a67f9cf410ae8aee8dd7c6f5");
     assert_eq!(derived.public.to_string(), "0x03c15b6b6465953b57ba9b24cb7af04787fd45b07da23ad77afdd9ff76a60b4993");
+  }
+
+  #[test]
+  fn extended_keys_test() {
+    let mnemonic = "around rubber impulse hunt tube problem buffalo this gym chimney surge cliff";
+    let master = KeyPair::from_mnemonic(mnemonic).unwrap();
+    let master_priv = master.ext_private.unwrap();
+    assert_eq!(master_priv.to_string(), "xprv9s21ZrQH143K4KTMS92J1GszW24isqe4ZDjZ9aQDmQK8SbiPTWFZ2HvNGbZmftDTnpZdaAGQN7nGRTzo647Ug8F8xioH71Mn2Vd29ENkeKC");
+
+    let account = master.derive("m/44'/0'/0'/0").unwrap();
+    let account_priv = account.ext_private.unwrap();
+    let account_pub = account.ext_public;
+    assert_eq!(account_priv.to_string(), "xprvA1WrsZWmGdBohiKzutdRNQDv1dr1VUzNPfvzCMK9KgTziJysMpShFyBzotMc77JLDcC1egXVRhGC4xcFsazgPkdyarPgTHopf1Y2aVQfYvA");
+    assert_eq!(account_pub.to_string(), "xpub6EWDH53f6zk6vCQU1vARjYAeZfgVtwiDktrazjikt1zyb7K1uMkwomWUf8GPmBbZeWk4eNRD83Cg1BT8767ed8ZpujdGCyfYPNRN9RZ9z5J");
   }
 }
