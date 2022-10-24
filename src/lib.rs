@@ -27,10 +27,11 @@ pub mod ecdsa {
   use bitcoin::secp256k1::Secp256k1;
   use bitcoin::util::base58;
   use bitcoin::util::bip32::{DerivationPath, ExtendedPrivKey, ExtendedPubKey};
+  use serde::{Serialize, Serializer};
 
   use crate::error::NoirError;
 
-  #[derive(Clone)]
+  #[derive(Clone, Serialize)]
   pub struct KeyPair {
     pub seed: Vec<u8>,
     pub private: Private,
@@ -45,6 +46,12 @@ pub mod ecdsa {
   impl Display for Private {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
       write!(f, "0x{}", hex::encode(self.0.as_slice()))
+    }
+  }
+
+  impl Serialize for Private {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+      serializer.serialize_str(self.to_string().as_ref())
     }
   }
 
@@ -63,12 +70,24 @@ pub mod ecdsa {
     }
   }
 
+  impl Serialize for ExtendedPrivate {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+      serializer.serialize_str(self.to_string().as_ref())
+    }
+  }
+
   #[derive(Copy, Clone, Debug)]
   pub struct Public([u8; 33]);
 
   impl Display for Public {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
       write!(f, "0x{}", hex::encode(self.0.as_slice()))
+    }
+  }
+
+  impl Serialize for Public {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+      serializer.serialize_str(self.to_string().as_ref())
     }
   }
 
@@ -84,6 +103,12 @@ pub mod ecdsa {
   impl Display for ExtendedPublic {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
       base58::check_encode_slice_to_fmt(f, self.0.as_slice())
+    }
+  }
+
+  impl Serialize for ExtendedPublic {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+      serializer.serialize_str(self.to_string().as_ref())
     }
   }
 
@@ -164,5 +189,13 @@ mod tests {
     let derived_pub = derived.ext_public;
     assert_eq!(derived_priv.to_string(), "xprvA1WrsZWmGdBohiKzutdRNQDv1dr1VUzNPfvzCMK9KgTziJysMpShFyBzotMc77JLDcC1egXVRhGC4xcFsazgPkdyarPgTHopf1Y2aVQfYvA");
     assert_eq!(derived_pub.to_string(), "xpub6EWDH53f6zk6vCQU1vARjYAeZfgVtwiDktrazjikt1zyb7K1uMkwomWUf8GPmBbZeWk4eNRD83Cg1BT8767ed8ZpujdGCyfYPNRN9RZ9z5J");
+  }
+
+  #[test]
+  fn keypair_serialize_test() {
+    let mnemonic = "around rubber impulse hunt tube problem buffalo this gym chimney surge cliff";
+    let keypair = KeyPair::from_mnemonic(mnemonic).unwrap();
+    let json = serde_json::json!(keypair);
+    println!("{}", json.to_string());
   }
 }
