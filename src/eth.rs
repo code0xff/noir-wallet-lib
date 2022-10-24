@@ -54,7 +54,7 @@ mod tests {
   fn eth_address_test() {
     let mnemonic = "hammer afford nothing drastic news coil inform switch stool wet denial science".to_string();
     let keypair = KeyPair::from_mnemonic(&mnemonic).unwrap();
-    let path = "m/44'/60'/0'/0/0".to_string();
+    let path = "m/44h/60h/0h/0/0".to_string();
     let derived = keypair.derive(&path).unwrap();
     let address = Address::from_public(&derived.public.as_bytes()).unwrap();
     assert_eq!(address.to_string(), "0x38e4A67366963f356f9834c04481ff65ca7A07a3");

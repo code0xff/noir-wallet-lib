@@ -43,7 +43,7 @@ mod tests {
   fn cosmos_address_test() {
     let mnemonic = "faith like regret hard hood ball jump rely sad million october comic".to_string();
     let keypair = KeyPair::from_mnemonic(&mnemonic).unwrap();
-    let path = "m/44'/118'/0'/0/0".to_string();
+    let path = "m/44h/118h/0h/0/0".to_string();
     let derived = keypair.derive(&path).unwrap();
     let address = cosmos::Address::from_public(derived.public.as_bytes().as_ref()).unwrap();
     assert_eq!(address.to_string("cosmos").unwrap(), "cosmos1evlxjlzenjqvc6ddeur20ftrhp27fsv98jxhpr");
@@ -53,7 +53,7 @@ mod tests {
   fn hrp_address_test() {
     let mnemonic = "buffalo squirrel angry will brain measure mechanic van adjust canyon theory burger".to_string();
     let keypair = KeyPair::from_mnemonic(&mnemonic).unwrap();
-    let path = "m/44'/118'/0'/0/0".to_string();
+    let path = "m/44h/118h/0h/0/0".to_string();
     let derived = keypair.derive(&path).unwrap();
     let address = cosmos::Address::from_public(derived.public.as_bytes().as_ref()).unwrap();
     assert_eq!(address.to_string("cosmos").unwrap(), "cosmos1hzuth7mwmaecq92r6kp4slfjvpk7a49j7s6n8e");

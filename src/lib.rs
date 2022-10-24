@@ -171,7 +171,7 @@ mod tests {
   #[test]
   fn parse_path_test() {
     let keypair = KeyPair::from_mnemonic("hammer afford nothing drastic news coil inform switch stool wet denial science").unwrap();
-    let derived = keypair.derive("m/44'/60'/0'/0/0").unwrap();
+    let derived = keypair.derive("m/44h/60h/0h/0/0").unwrap();
 
     assert_eq!(derived.private.to_string(), "0xd8f01ecf156f642a53f39c5ce47c03e237fd9118a67f9cf410ae8aee8dd7c6f5");
     assert_eq!(derived.public.to_string(), "0x03c15b6b6465953b57ba9b24cb7af04787fd45b07da23ad77afdd9ff76a60b4993");
@@ -184,7 +184,7 @@ mod tests {
     let master_priv = master.ext_private.unwrap();
     assert_eq!(master_priv.to_string(), "xprv9s21ZrQH143K4KTMS92J1GszW24isqe4ZDjZ9aQDmQK8SbiPTWFZ2HvNGbZmftDTnpZdaAGQN7nGRTzo647Ug8F8xioH71Mn2Vd29ENkeKC");
 
-    let derived = master.derive("m/44'/0'/0'/0").unwrap();
+    let derived = master.derive("m/44h/0h/0h/0").unwrap();
     let derived_priv = derived.ext_private.unwrap();
     let derived_pub = derived.ext_public;
     assert_eq!(derived_priv.to_string(), "xprvA1WrsZWmGdBohiKzutdRNQDv1dr1VUzNPfvzCMK9KgTziJysMpShFyBzotMc77JLDcC1egXVRhGC4xcFsazgPkdyarPgTHopf1Y2aVQfYvA");
@@ -196,6 +196,8 @@ mod tests {
     let mnemonic = "around rubber impulse hunt tube problem buffalo this gym chimney surge cliff";
     let keypair = KeyPair::from_mnemonic(mnemonic).unwrap();
     let json = serde_json::json!(keypair);
-    println!("{}", json.to_string());
+    assert_eq!(json.to_string(),
+      "{\"ext_private\":\"xprv9s21ZrQH143K4KTMS92J1GszW24isqe4ZDjZ9aQDmQK8SbiPTWFZ2HvNGbZmftDTnpZdaAGQN7nGRTzo647Ug8F8xioH71Mn2Vd29ENkeKC\",\"ext_public\":\"xpub661MyMwAqRbcGoXpYAZJNQpj43uDHJMuvSf9wxoqKjr7KQ3Y13Zoa6Er7rRt4LcQTJcvY5iSxn12UtzD7b12iP7TEpuqKJuwhgJS9r816Bz\",\"private\":\"0xd8b62935cf9a291ecd72568dc878775294109c458596e1abe88fb0ec71e0f42f\",\"public\":\"0x02c2c942432519b70bf5571ff564cf98cb052dad104d62690578017293041c1c88\",\"seed\
+    \":[81,67,93,5,8,99,243,188,197,243,77,226,233,98,115,19,246,89,4,251,39,147,65,121,8,154,219,28,210,86,244,245,121,170,239,195,33,64,72,59,138,103,228,40,241,210,110,233,156,144,253,35,24,206,221,170,83,209,192,116,159,198,53,201]}");
   }
 }
