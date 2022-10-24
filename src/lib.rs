@@ -159,10 +159,10 @@ mod tests {
     let master_priv = master.ext_private.unwrap();
     assert_eq!(master_priv.to_string(), "xprv9s21ZrQH143K4KTMS92J1GszW24isqe4ZDjZ9aQDmQK8SbiPTWFZ2HvNGbZmftDTnpZdaAGQN7nGRTzo647Ug8F8xioH71Mn2Vd29ENkeKC");
 
-    let account = master.derive("m/44'/0'/0'/0").unwrap();
-    let account_priv = account.ext_private.unwrap();
-    let account_pub = account.ext_public;
-    assert_eq!(account_priv.to_string(), "xprvA1WrsZWmGdBohiKzutdRNQDv1dr1VUzNPfvzCMK9KgTziJysMpShFyBzotMc77JLDcC1egXVRhGC4xcFsazgPkdyarPgTHopf1Y2aVQfYvA");
-    assert_eq!(account_pub.to_string(), "xpub6EWDH53f6zk6vCQU1vARjYAeZfgVtwiDktrazjikt1zyb7K1uMkwomWUf8GPmBbZeWk4eNRD83Cg1BT8767ed8ZpujdGCyfYPNRN9RZ9z5J");
+    let derived = master.derive("m/44'/0'/0'/0").unwrap();
+    let derived_priv = derived.ext_private.unwrap();
+    let derived_pub = derived.ext_public;
+    assert_eq!(derived_priv.to_string(), "xprvA1WrsZWmGdBohiKzutdRNQDv1dr1VUzNPfvzCMK9KgTziJysMpShFyBzotMc77JLDcC1egXVRhGC4xcFsazgPkdyarPgTHopf1Y2aVQfYvA");
+    assert_eq!(derived_pub.to_string(), "xpub6EWDH53f6zk6vCQU1vARjYAeZfgVtwiDktrazjikt1zyb7K1uMkwomWUf8GPmBbZeWk4eNRD83Cg1BT8767ed8ZpujdGCyfYPNRN9RZ9z5J");
   }
 }
