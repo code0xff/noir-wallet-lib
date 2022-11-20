@@ -24,7 +24,7 @@ pub mod ecdsa {
   use bip39::{Mnemonic, Seed};
   use bip39::Language::English;
   use bitcoin::Network;
-  use bitcoin::secp256k1::Secp256k1;
+  use bitcoin::secp256k1::{PublicKey, Secp256k1};
   use bitcoin::util::base58;
   use bitcoin::util::bip32::{DerivationPath, ExtendedPrivKey, ExtendedPubKey};
   use serde::{Serialize, Serializer};
@@ -92,8 +92,17 @@ pub mod ecdsa {
   }
 
   impl Public {
+    pub fn from(raw: [u8; 33]) -> Self {
+      Self(raw)
+    }
+
     pub fn as_bytes(&self) -> [u8; 33] {
       self.0.clone()
+    }
+
+    pub fn to_uncompressed(&self) -> Result<[u8; 65], NoirError> {
+      let pubkey = PublicKey::from_slice(self.0.as_slice())?;
+      Ok(pubkey.serialize_uncompressed())
     }
   }
 
@@ -166,7 +175,7 @@ pub mod ecdsa {
 
 #[cfg(test)]
 mod tests {
-  use crate::ecdsa::KeyPair;
+  use crate::ecdsa::{KeyPair, Public};
 
   #[test]
   fn parse_path_test() {
@@ -199,5 +208,16 @@ mod tests {
     assert_eq!(json.to_string(),
       "{\"ext_private\":\"xprv9s21ZrQH143K4KTMS92J1GszW24isqe4ZDjZ9aQDmQK8SbiPTWFZ2HvNGbZmftDTnpZdaAGQN7nGRTzo647Ug8F8xioH71Mn2Vd29ENkeKC\",\"ext_public\":\"xpub661MyMwAqRbcGoXpYAZJNQpj43uDHJMuvSf9wxoqKjr7KQ3Y13Zoa6Er7rRt4LcQTJcvY5iSxn12UtzD7b12iP7TEpuqKJuwhgJS9r816Bz\",\"private\":\"0xd8b62935cf9a291ecd72568dc878775294109c458596e1abe88fb0ec71e0f42f\",\"public\":\"0x02c2c942432519b70bf5571ff564cf98cb052dad104d62690578017293041c1c88\",\"seed\
     \":[81,67,93,5,8,99,243,188,197,243,77,226,233,98,115,19,246,89,4,251,39,147,65,121,8,154,219,28,210,86,244,245,121,170,239,195,33,64,72,59,138,103,228,40,241,210,110,233,156,144,253,35,24,206,221,170,83,209,192,116,159,198,53,201]}");
+  }
+
+  #[test]
+  fn to_uncompressed_test() {
+    let raw = hex::decode("03e7d8e14057c43374a59d2afd02565006b98c73281bdb61839b60e4b701bd2ae6").unwrap();
+    let mut pubkey = [0u8; 33];
+    pubkey.clone_from_slice(raw.as_slice());
+    let compressed = Public::from(pubkey);
+    let uncompressed = compressed.to_uncompressed().unwrap();
+    assert_eq!(hex::encode(uncompressed),
+      "04e7d8e14057c43374a59d2afd02565006b98c73281bdb61839b60e4b701bd2ae66163289ce483f9261eebd747dc6dc0915b7b74545e0ca4f6617638337998c02d");
   }
 }
