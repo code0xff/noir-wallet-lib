@@ -2,6 +2,7 @@ pub mod error;
 pub mod eth;
 pub mod btc;
 pub mod cosmos;
+pub mod evmos;
 
 pub mod bip39 {
   use bip39::Seed;

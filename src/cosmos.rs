@@ -36,8 +36,7 @@ impl Address {
 
 #[cfg(test)]
 mod tests {
-  use crate::cosmos;
-  use crate::ecdsa::KeyPair;
+  use crate::{cosmos, ecdsa::KeyPair};
 
   #[test]
   fn cosmos_address_test() {
