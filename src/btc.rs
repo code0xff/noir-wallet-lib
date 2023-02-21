@@ -1,16 +1,18 @@
-use bitcoin::hashes::{Hash, ripemd160};
-use bitcoin::psbt::serialize::Serialize;
-use bitcoin::util::base58;
+use bitcoin::{
+  hashes::{
+    Hash, ripemd160
+  }, 
+  psbt::serialize::Serialize, 
+  util::base58
+};
 use sp_core::hashing::sha2_256;
 
 #[derive(PartialEq)]
-pub struct Address {
-  inner: Vec<u8>,
-}
+pub struct Address(Vec<u8>);
 
 impl Address {
   pub fn as_bytes(&self) -> Vec<u8> {
-    self.inner.clone()
+    self.0.clone()
   }
 
   pub fn from_public(public: &[u8]) -> Self {
@@ -22,20 +24,22 @@ impl Address {
     let checksum = sha2_256(&sha256ed_network_added)[..4].to_owned();
     address[21..].clone_from_slice(&checksum);
 
-    Self {
-      inner: address.to_vec()
-    }
+    Self(address.to_vec())
   }
 
   pub fn to_string(&self) -> String {
-    base58::encode_slice(&self.inner)
+    base58::encode_slice(&self.0)
   }
 }
 
 #[cfg(test)]
 mod tests {
-  use bitcoin::hashes::{Hash, ripemd160};
-  use bitcoin::psbt::serialize::Serialize;
+  use bitcoin::{
+    hashes::{
+      Hash, ripemd160
+    }, 
+    psbt::serialize::Serialize
+  };
   use sp_core::hashing::sha2_256;
 
   use crate::btc;

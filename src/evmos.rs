@@ -1,31 +1,30 @@
-use bitcoin::bech32::{ToBase32, self};
-use bitcoin::secp256k1::PublicKey;
+use bitcoin::{
+  bech32::{
+    self, ToBase32, Variant::Bech32
+  }, 
+  secp256k1::PublicKey
+};
 use sp_core::keccak_256;
-use bitcoin::bech32::Variant::Bech32;
 
 use crate::error::NoirError;
 
 #[derive(PartialEq)]
-pub struct Address {
-  inner: Vec<u8>,
-}
+pub struct Address(Vec<u8>);
 
 impl Address {
   pub fn as_bytes(&self) -> Vec<u8> {
-    self.inner.clone()
+    self.0.clone()
   }
 
   pub fn from_public(public: &[u8]) -> Result<Self, NoirError> {
     let public = PublicKey::from_slice(public)?;
     let keccak256ed = keccak_256(&public.serialize_uncompressed()[1..]);
     let address = &keccak256ed[12..];
-    Ok(Self {
-      inner: address.to_vec()
-    })
+    Ok(Self(address.to_vec()))
   }
 
   pub fn to_string(&self, hrp: &str) -> Result<String, NoirError> {
-    let data = self.inner.as_slice();
+    let data = self.0.as_slice();
     let base32ed = data.to_base32();
     let address = bech32::encode(hrp, base32ed, Bech32)?;
     Ok(address)

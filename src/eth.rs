@@ -4,26 +4,22 @@ use sp_core::keccak_256;
 use crate::error::NoirError;
 
 #[derive(PartialEq)]
-pub struct Address {
-  inner: Vec<u8>,
-}
+pub struct Address(Vec<u8>);
 
 impl Address {
   pub fn as_bytes(&self) -> Vec<u8> {
-    self.inner.clone()
+    self.0.clone()
   }
 
   pub fn from_public(public: &[u8]) -> Result<Self, NoirError> {
     let public = PublicKey::from_slice(public)?;
     let keccak256ed = keccak_256(&public.serialize_uncompressed()[1..]);
     let address = &keccak256ed[12..];
-    Ok(Self {
-      inner: address.to_vec()
-    })
+    Ok(Self(address.to_vec()))
   }
 
   pub fn to_string(&self) -> String {
-    let address = hex::encode(self.inner.as_slice());
+    let address = hex::encode(self.0.as_slice());
     let keccak256ed = hex::encode(keccak_256(address.as_bytes()));
     let mut result: Vec<char> = Vec::new();
     for (i, c) in address.chars().into_iter().enumerate() {

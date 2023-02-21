@@ -1,33 +1,32 @@
-use bitcoin::bech32;
-use bitcoin::bech32::ToBase32;
-use bitcoin::bech32::Variant::Bech32;
-use bitcoin::hashes::{Hash, ripemd160};
-use bitcoin::psbt::serialize::Serialize;
+use bitcoin::{
+  bech32::{
+    self, ToBase32, Variant::Bech32
+  }, 
+  hashes::{
+    Hash, ripemd160
+  }, 
+  psbt::serialize::Serialize};
 use sp_core::hashing::sha2_256;
 
 use crate::error::NoirError;
 
 #[derive(PartialEq)]
-pub struct Address {
-  inner: Vec<u8>,
-}
+pub struct Address(Vec<u8>);
 
 impl Address {
   pub fn as_bytes(&self) -> Vec<u8> {
-    self.inner.clone()
+    self.0.clone()
   }
 
   pub fn from_public(public: &[u8]) -> Result<Self, NoirError> {
     let sha256ed = sha2_256(public);
     let address = ripemd160::Hash::hash(&sha256ed).serialize();
 
-    Ok(Self {
-      inner: address.to_owned()
-    })
+    Ok(Self(address.to_owned()))
   }
 
   pub fn to_string(&self, hrp: &str) -> Result<String, NoirError> {
-    let data = self.inner.as_slice();
+    let data = self.0.as_slice();
     let base32ed = data.to_base32();
     let address = bech32::encode(hrp, base32ed, Bech32)?;
     Ok(address)
